@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Place searches</title>
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='skeleton.css') }}">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <meta id="result-locs" data-name="{{resultLocations}}">
+    <meta id = "full-json" data-name = "{{fullJson}}">
+    <style>
+      html, body, #map-canvas{
+        height: 300px;
+        width: auto;
+        margin: 0px;
+        padding: 0px;
+      }
+      /*div.map_canvas img{max-width: none;}*/
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places"></script>
+    <script>
+var map;
+var infowindow;
+var jsonStr;
+function initialize() {
+  var pyrmont = new google.maps.LatLng(-33.8665433, 151.1956316);
+
+  map = new google.maps.Map(document.getElementById('map-canvas'), {
+    zoom: 8,
+    center: pyrmont
+  });
+
+  var coordinates = document.getElementById("locationInput").value.split(',');
+  if(coordinates.length > 1){
+  var markerLatLng = new google.maps.LatLng(parseFloat(coordinates[0]), parseFloat(coordinates[1]));
+
+  placeMarker(markerLatLng, map);
+  }
+  //var resultLocStr = $('#result-locs').data();
+  
+
+
+  google.maps.event.addListener(map, 'click', function(e) {
+    var latLngStr = "";
+    latLngStr = latLngStr.concat(e.latLng.lat());
+    latLngStr = latLngStr.concat(",");
+    latLngStr = latLngStr.concat(e.latLng.lng());
+    console.log(latLngStr);
+    document.getElementById('locationInput').value = latLngStr;
+    placeMarker(e.latLng, map);
+    document.getElementById('searchForm').submit();
+
+  });
+}
+
+function placeMarker(position, map) {
+  var marker = new google.maps.Marker({
+    position: position,
+    map: map
+  });
+  map.panTo(position);
+}
+
+function placeBlueMarker(position, map){
+    var pinColor = "0000FF";
+    var pinImage = new google.maps.MarkerImage("http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|" + pinColor,
+      new google.maps.Size(21, 34),
+      new google.maps.Point(0,0),
+      new google.maps.Point(10, 34));
+
+     var marker = new google.maps.Marker({
+                position: position, 
+                map: map,
+                icon: pinImage,
+            });
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+    </script>
+  </head>
+  <body>
+    <p>
+      1. Enter keyword you want to search for (food, parks, schools, etc.)</br>
+      2. Enter radius of search</br>
+      3. Choose location on map to center search around</br>
+      4. If you are satisfied with the locations displayed in the results box, click download to download your locations!</br>
+    </p>
+    <div class = "container">
+      <div class = "row">
+        <div class = "one-third column">
+          <form action="/" method="post" id = "searchForm">
+            Keyword: <input type = "text" name = "keyword" value = "{{keyword}}" placeholder = "{{keyword}}"><br>
+            Radius: <input type="text" name="radius" value = "{{radius}}" placeholder = "{{radius}}"><br>
+            <input type = "hidden" name = "location" id = "locationInput" value = "{{location}}" placeholder = "{{location}}">
+            <!-- <input type="submit" name = "results" value="results"> -->
+
+          </form>
+          <div style = "width:auto; height:200px; overflow:scroll;">
+            {% for place in places %}
+              <p>{{place}}<p>
+            {% endfor %}
+          </div> 
+          <form action = "/download" method = "post">
+            <input type = "hidden" value = "{{places}}" name = "places" >
+            <input type = "hidden" value = "{{fullJson}}" name = "fullJson">
+            <input type = "submit" name = "download" value = "download">
+          </form>
+        </div>
+        <div class = "two-thirds column">
+           <div id="map-canvas"></div>
+        </div>
+      </div>
+    </div>
+        
+
+  </body>
+</html>
